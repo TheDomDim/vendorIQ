@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copla — Vendor Management Pricing</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem; }
+  .wrap { width: 100%; max-width: 560px; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; }
+  label { font-size: 13px; color: #666; display: block; margin-bottom: 8px; }
+  .section { margin-bottom: 1.5rem; }
+  input[type=range] { width: 100%; accent-color: #2563eb; cursor: pointer; }
+  input[type=number] { width: 64px; text-align: center; font-size: 14px; font-weight: 500; padding: 6px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; color: #1a1a1a; }
+  input[type=number]:focus { outline: 2px solid #2563eb; border-color: transparent; }
+  .vendor-row { display: flex; align-items: center; gap: 12px; }
+  .year-btns { display: flex; gap: 8px; }
+  .yr-btn { flex: 1; padding: 8px 0; font-size: 13px; cursor: pointer; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; color: #1a1a1a; font-weight: 400; line-height: 1.3; }
+  .yr-btn.active { border: 2px solid #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 500; }
+  .yr-btn small { display: block; font-size: 11px; opacity: 0.8; }
+  .rec-card { background: #fff; border: 2px solid #2563eb; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .rec-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .rec-label { font-size: 13px; color: #666; margin-bottom: 2px; }
+  .rec-name { font-size: 20px; font-weight: 500; }
+  .rec-sub { font-size: 12px; color: #666; margin-top: 2px; }
+  .rec-price { font-size: 20px; font-weight: 500; text-align: right; }
+  .rec-was { font-size: 12px; color: #666; }
+  .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; border-top: 1px solid #e5e7eb; padding-top: 12px; }
+  .metric { background: #f5f4f0; border-radius: 6px; padding: 8px 10px; }
+  .metric-label { font-size: 11px; color: #666; margin-bottom: 2px; }
+  .metric-val { font-size: 14px; font-weight: 500; }
+  .plan-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
+  .plan-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 6px; border: 1px solid #e5e7eb; background: #f9f9f7; cursor: pointer; transition: opacity 0.1s; }
+  .plan-row.active { border-color: #93c5fd; background: #eff6ff; }
+  .plan-row.dim { opacity: 0.4; }
+  .plan-left { display: flex; gap: 12px; align-items: center; }
+  .plan-name { font-size: 13px; font-weight: 400; min-width: 52px; }
+  .plan-row.active .plan-name { font-weight: 500; color: #1d4ed8; }
+  .plan-vendors { font-size: 12px; color: #888; }
+  .plan-row.active .plan-vendors { color: #3b82f6; }
+  .plan-right { text-align: right; }
+  .plan-price { font-size: 13px; font-weight: 500; }
+  .plan-row.active .plan-price { color: #1d4ed8; }
+  .plan-per { font-size: 11px; color: #888; margin-left: 6px; }
+  .plan-row.active .plan-per { color: #3b82f6; }
+  .custom-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 1rem 1.25rem; color: #92400e; font-size: 14px; margin-bottom: 1.5rem; }
+  .divider { border: none; border-top: 1px solid #e5e7eb; margin-bottom: 1.25rem; }
+  .feat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .feat-header-label { font-size: 13px; color: #666; }
+  .feat-legend { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 500; }
+  .feat-groups { display: flex; flex-direction: column; gap: 6px; }
+  .feat-group { border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; background: #fff; }
+  .feat-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: none; border: none; cursor: pointer; font-size: 13px; font-weight: 500; color: #1a1a1a; text-align: left; }
+  .feat-toggle:hover { background: #f9f9f7; }
+  .feat-toggle-right { font-size: 11px; color: #888; font-weight: 400; }
+  .feat-body { border-top: 1px solid #e5e7eb; padding: 8px 12px 12px; display: none; }
+  .feat-body.open { display: block; }
+  .feat-item { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: start; padding: 5px 0; }
+  .feat-check { font-size: 12px; color: #16a34a; margin-top: 1px; }
+  .feat-text { font-size: 13px; color: #374151; line-height: 1.5; }
+  .feat-badge { font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; background: #dcfce7; color: #166534; white-space: nowrap; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Vendor management MVP pricing (VendorIQ)</h1>
+
+  <div class="section">
+    <label>Number of vendors</label>
+    <div class="vendor-row">
+      <input type="range" id="slider" min="1" max="150" value="25">
+      <input type="number" id="numInput" min="1" value="25">
+    </div>
+  </div>
+
+  <div class="section">
+    <label>Contract length</label>
+    <div class="year-btns">
+      <button class="yr-btn active" data-years="1">1 year</button>
+      <button class="yr-btn" data-years="2">2 years<small>–15%</small></button>
+      <button class="yr-btn" data-years="3">3 years<small>–25%</small></button>
+    </div>
+  </div>
+
+  <div id="custom-box" class="custom-box" style="display:none">
+    Over 150 vendors — custom Enterprise pricing applies. Contact Aurimas.
+  </div>
+
+  <div id="pricing-section">
+    <div class="rec-card">
+      <div class="rec-top">
+        <div>
+          <div class="rec-label">Recommended plan</div>
+          <div class="rec-name" id="rec-name">Growth</div>
+          <div class="rec-sub" id="rec-sub">up to 40 vendors</div>
+        </div>
+        <div>
+          <div class="rec-label" style="text-align:right">Per year</div>
+          <div class="rec-price" id="rec-price">€2,400</div>
+          <div class="rec-was" id="rec-was"></div>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Total</div><div class="metric-val" id="m-total">€2,400</div></div>
+        <div class="metric"><div class="metric-label">Per vendor</div><div class="metric-val" id="m-vendor">€60/y</div></div>
+        <div class="metric"><div class="metric-label">Saving</div><div class="metric-val" id="m-saving">—</div></div>
+      </div>
+    </div>
+
+    <div class="plan-list" id="plan-list"></div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="feat-header">
+    <span class="feat-header-label">All plans include</span>
+  </div>
+
+  <div class="feat-groups" id="feat-groups"></div>
+</div>
+
+<script>
+const plans = [
+  { name: "Lite",    vendors: 10,  price: 800 },
+  { name: "Starter", vendors: 20,  price: 1400 },
+  { name: "Growth",  vendors: 40,  price: 2400 },
+  { name: "Scale",   vendors: 80,  price: 4000 },
+  { name: "Large",   vendors: 150, price: 6000 },
+];
+
+const discounts = { 1: 0, 2: 0.15, 3: 0.25 };
+
+const featureGroups = [
+  {
+    label: "Vendor onboarding",
+    features: [
+      { text: "Configurable flows per vendor type or regulatory framework", unique: false },
+      { text: "Secure document sharing with version control", unique: false },
+      { text: "Questionnaires tailored to business function & framework", unique: false },
+      { text: "Built-in communication threads & task assignments", unique: false },
+      { text: "Multi-stakeholder approval workflows", unique: false },
+      { text: "Automated notifications — no manual follow-ups", unique: false },
+    ],
+  },
+  {
+    label: "Risk evaluation & recommendations",
+    features: [
+      { text: "Full vendor profiles: contacts, certifications, risk tier, exposure", unique: false },
+      { text: "Real-time risk feeds: breach alerts & dark web monitoring", unique: false },
+      { text: "Actionable recommendations on identified risks", unique: false },
+      { text: "Certification tracking (ISO 27001, GDPR, etc.) with expiry alerts", unique: false },
+      { text: "Cybersecurity resilience scoring per vendor", unique: false },
+      { text: "Risk tier history and audit trail for regulatory review", unique: false },
+    ],
+  },
+  {
+    label: "Contract lifecycle management",
+    features: [
+      { text: "Renewal, termination & notice period tracking with alerts", unique: false },
+      { text: "Task assignments to vendors from contract milestones", unique: false },
+      { text: "Full change history with timestamps and named owners", unique: false },
+      { text: "Payment terms & SLA visibility in one place", unique: false },
+      { text: "Linked to DORA RoI data — no double entry", unique: false },
+      { text: "Audit-ready contract record for supervisory review", unique: false },
+    ],
+  },
+];
+
+function fmt(n) {
+  return "€" + Math.round(n).toLocaleString("de-DE");
+}
+
+let vendorCount = 25;
+let years = 1;
+
+function getRecommended() {
+  return plans.find(p => vendorCount <= p.vendors) || null;
+}
+
+function render() {
+  const custom = vendorCount > 150;
+  document.getElementById("custom-box").style.display = custom ? "block" : "none";
+  document.getElementById("pricing-section").style.display = custom ? "none" : "block";
+  if (custom) return;
+
+  const rec = getRecommended();
+  const recIdx = plans.indexOf(rec);
+  const disc = discounts[years];
+  const base = rec.price;
+  const final = Math.round(base * (1 - disc));
+  const total = final * years;
+  const saving = Math.round(base * years - total);
+
+  document.getElementById("rec-name").textContent = rec.name;
+  document.getElementById("rec-sub").textContent = "up to " + rec.vendors + " vendors";
+  document.getElementById("rec-price").textContent = fmt(final);
+  document.getElementById("rec-was").textContent = years > 1 ? "was " + fmt(base) : "";
+  document.getElementById("m-total").textContent = fmt(total);
+  document.getElementById("m-vendor").textContent = fmt(Math.round(final / rec.vendors)) + "/y";
+  document.getElementById("m-saving").textContent = years > 1 ? fmt(saving) : "—";
+
+  const list = document.getElementById("plan-list");
+  list.innerHTML = "";
+  plans.forEach((p, i) => {
+    const fp = Math.round(p.price * (1 - disc));
+    const isRec = i === recIdx;
+    const isDim = i < recIdx;
+    const row = document.createElement("div");
+    row.className = "plan-row" + (isRec ? " active" : "") + (isDim ? " dim" : "");
+    row.innerHTML = `
+      <div class="plan-left">
+        <span class="plan-name">${p.name}</span>
+        <span class="plan-vendors">≤${p.vendors} vendors</span>
+      </div>
+      <div class="plan-right">
+        <span class="plan-price">${fmt(fp)}/y</span>
+        <span class="plan-per">€${Math.round(fp / p.vendors)}/vendor</span>
+      </div>`;
+    row.addEventListener("click", () => { vendorCount = p.vendors; syncInputs(); render(); });
+    list.appendChild(row);
+  });
+}
+
+function syncInputs() {
+  document.getElementById("slider").value = Math.min(vendorCount, 150);
+  document.getElementById("numInput").value = vendorCount;
+}
+
+document.getElementById("slider").addEventListener("input", e => {
+  vendorCount = +e.target.value;
+  document.getElementById("numInput").value = vendorCount;
+  render();
+});
+
+document.getElementById("numInput").addEventListener("input", e => {
+  vendorCount = +e.target.value || 1;
+  document.getElementById("slider").value = Math.min(vendorCount, 150);
+  render();
+});
+
+document.querySelectorAll(".yr-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".yr-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    years = +btn.dataset.years;
+    render();
+  });
+});
+
+const fg = document.getElementById("feat-groups");
+featureGroups.forEach(g => {
+  const grp = document.createElement("div");
+  grp.className = "feat-group";
+  const toggle = document.createElement("button");
+  toggle.className = "feat-toggle";
+  toggle.innerHTML = `<span>${g.label}</span><span class="feat-toggle-right">${g.features.length} features ▼</span>`;
+  const body = document.createElement("div");
+  body.className = "feat-body";
+  g.features.forEach(f => {
+    const item = document.createElement("div");
+    item.className = "feat-item";
+    item.innerHTML = `
+      <span class="feat-check">✓</span>
+      <span class="feat-text">${f.text}</span>
+      ${f.unique ? '' : ''}`;
+    body.appendChild(item);
+  });
+  toggle.addEventListener("click", () => {
+    const isOpen = body.classList.toggle("open");
+    toggle.querySelector(".feat-toggle-right").textContent = g.features.length + " features " + (isOpen ? "▲" : "▼");
+  });
+  grp.appendChild(toggle);
+  grp.appendChild(body);
+  fg.appendChild(grp);
+});
+
+render();
+</script>
+</body>
+</html>
